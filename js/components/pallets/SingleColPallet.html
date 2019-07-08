@@ -1,0 +1,109 @@
+<template>
+<style>
+   .colAdd,.colMinus{
+        display: block;
+        width:25px;
+        height:25px;
+        border-radius: 25px;
+        border:solid 1px gray;
+        position: absolute;
+        top:10px;
+        text-align: center;
+        background:white;
+        font-weight:bold;
+   }
+   a{text-decoration: none}
+   .colAdd{
+        right:25px;
+   }
+   .colMinus{
+        right:55px;
+   }
+
+   
+
+</style>
+<div class="colPallet">
+   <a href="#" class="colAdd">+</a>    
+   <a href="#" class="colMinus">-</a>  
+</div>
+
+</template>
+
+<script>
+(function(window, document, undefined) {
+    
+    var thatDoc = document;
+    
+    var thisDoc = (thatDoc._currentScript || thatDoc.currentScript).ownerDocument;
+   
+    var template = thisDoc.querySelector('template').content;
+    
+
+    if (window.ShadowDOMPolyfill) {
+        WebComponents.ShadowCSS.shimStyling(template, 'app-singlecolpallet');
+    }
+
+    class SingleColPallet extends HTMLElement {
+        constructor() {
+            super();
+        }
+
+        connectedCallback() {
+            try {
+                var shadowRoot = this.attachShadow({
+                    mode: 'open'
+                });
+                // Adds a template clone into shadow root.
+                var clone = thatDoc.importNode(template, true);
+                shadowRoot.appendChild(clone);
+
+                let colAdd = shadowRoot.querySelector('.colAdd');
+                let colMinus = shadowRoot.querySelector('.colMinus');
+
+                colAdd.addEventListener('click', this.increaseCol);
+                colMinus.addEventListener('click', this.decreaseCol);
+            } catch (err) {
+                console.log("Error on component/app-singlecolpallet/connectedCallback", err);
+            }
+        }
+
+        increaseCol(e) {
+            try {
+                var event = new CustomEvent("action", {
+                    bubbles: true,
+                    cancelable: false,
+                    composed: true,
+                    detail: {
+                        value: "add"
+                    }
+                });
+                this.dispatchEvent(event);
+                e.preventDefault();
+            } catch (err) {
+                console.log("Error on component/app-singlecolpallet/increaseCol", err);
+            }
+        }
+
+        decreaseCol(e) {
+            try {
+                var event = new CustomEvent("action", {
+                    bubbles: true,
+                    cancelable: false,
+                    composed: true,
+                    detail: {
+                        value: "minus"
+                    }
+                });
+                this.dispatchEvent(event);
+                e.preventDefault();
+            } catch (err) {
+                console.log("Error on component/app-singlecolpallet/decreaseCol", err);
+            }
+
+        }
+
+    }
+    window.customElements.define('app-singlecolpallet', SingleColPallet);
+})(window, document);
+</script>

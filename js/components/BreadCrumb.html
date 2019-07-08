@@ -1,0 +1,223 @@
+<template>
+<style>
+nav{position:relative;}
+   .config{
+    position:absolute;
+    top:10px;
+    right:15px;
+    cursor:pointer;
+    z-index:9;
+   }
+   .cancel{
+    position: absolute;
+    right:10px;
+   }
+   .pallet {
+    padding:5px;
+    font-size:12px;
+    position:absolute;
+    top:10px;
+    right:-245px;
+    z-index:10;
+    width:250px;
+    border:solid 1px #cccccc;
+    text-align:left;
+    background:#ffffff;
+    display:none;
+    border-radius:3px;
+
+   }
+   .pallet h4{margin:0px; padding: 5px; font-size:14px;}
+   .list-group-item.nopad{padding:0px;}
+   #plus{
+        position: absolute;
+    top: 3px;
+    right: 3px;
+    padding: 5px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    background: none;
+    border:none;
+   }
+   #plus img{
+    position:relative;
+    top:-4px;
+   }
+   .form-control.noborder{border:none;}
+   ul.segment{
+        margin:0px 0 0 0;
+        padding:3px 5px;
+   }
+   .breadcrumbinput{width:100%; border:none; padding:5px;}
+</style>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <!--<li class="breadcrumb-item"><a href="#">Home</a></li>
+    <li class="breadcrumb-item"><a href="#">Library</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Data</li>-->
+  </ol>
+  <a href="#" class="config"><img src="js/img/system.svg" width="16" height="16" /></a>
+  <div class="pallet">
+    <a href="#" class="cancel"><img src="js/img/cancel.svg" width="10" height="10" /></a>
+    <h4>Breadcrumb</h4>
+    <ul class="segment list-group">
+        <li class="list-group-item nopad">
+            <input type="text" placeholder="Add Link Text" class="breadcrumbinput" class="form-control noborder form-control-sm" /> 
+            <button id="plus"><img src="js/img/plus.svg" width="10" height="10"  /></button>
+
+
+    </li>
+    <li class="list-group-item">
+        <a href="#" class="removeComponent">Remove Component</a>
+    </li>
+    </ul>
+  </div>
+</nav>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</template>
+
+<script>
+(function(window, document, undefined) {
+
+    var thatDoc = document;
+
+    var thisDoc = (thatDoc._currentScript || thatDoc.currentScript).ownerDocument;
+
+    var template = thisDoc.querySelector('template').content;
+    var shadowRoot;
+    var data =[
+        "Home",
+        "Libaray",
+        "Data"
+    ];
+
+    // Shim Shadow DOM styles if needed
+    /*
+    if (window.ShadowDOMPolyfill) {
+        WebComponents.ShadowCSS.shimStyling(template, 'vimeo');
+    }
+    */
+    class BreadCrumb extends HTMLElement {
+        constructor() {
+
+            super();
+        }
+        static get observedAttributes() { return ["data"]; }
+        connectedCallback() {
+            try {
+                shadowRoot = this.attachShadow({
+                    mode: 'open'
+                });
+                // Adds a template clone into shadow root.
+                var clone = thatDoc.importNode(template, true);
+                shadowRoot.appendChild(clone);
+
+                var configBtn = shadowRoot.querySelector(".config");
+                configBtn.addEventListener("click",this.openPallet);
+
+                var breadcrumb = shadowRoot.querySelector('.breadcrumb');
+                this.setBreadCrumbData();
+                
+                var cancel = shadowRoot.querySelector('.cancel');
+                cancel.addEventListener('click',this.hidePallet);
+
+                var removeComponent = shadowRoot.querySelector('.removeComponent');
+                removeComponent.addEventListener('click',this.removeComponentEvent);
+                
+                var plus = shadowRoot.querySelector('#plus');
+                plus.addEventListener('click',this.addBreadCrumbData);
+              
+               
+            } catch (err) {
+                console.log("Error on component/app-colpallet/connectedCallback" + err)
+            }
+
+
+
+        }
+        addBreadCrumbData(){
+            console.log("addBreadCrumbData");
+            let breadcrumbinput = shadowRoot.querySelector('.breadcrumbinput');
+           
+            data.push(breadcrumbinput.value);
+
+            console.log(JSON.stringify(data));
+            //shadowRoot.parentElement.setAttribute("data","asd");
+            
+             var event = new CustomEvent("changeAttribute", {
+                bubbles: true,
+                cancelable: false,
+                composed: true,
+                detail: {
+                    action:"changeAttribute",
+                    attribute:"data",
+                    value:data
+                }
+            });
+            this.dispatchEvent(event);
+
+        }
+        attributeChangedCallback(){
+            console.log("attributeChangedCallback");
+            this.setBreadCrumb();
+        }
+        setBreadCrumb(){
+            var mydata = this.getAttribute('data');
+            console.log(JSON.parse(mydata));
+            var breadcrumbData = JSON.parse(mydata);
+            var lastIndex=breadcrumbData.length-1;
+
+            var breadcrumb=shadowRoot.querySelector('.breadcrumb');
+            breadcrumb.innerHTML="";
+            breadcrumbData.forEach((item,index)=>{
+                var div = document.createElement('div');
+                      
+                if(index==lastIndex){
+                    div.innerHTML = `<li class="breadcrumb-item" contenteditable="true">${item}</li>`;
+                }else{
+                    div.innerHTML = `<li class="breadcrumb-item"  aria-current="page"><a contenteditable="true" href="#">${item}</a></li>`;
+                }
+                breadcrumb.appendChild(div.firstChild);
+            })
+        }
+        setBreadCrumbData(){
+            console.log(data);
+
+            this.setAttribute("data",JSON.stringify(data));
+           
+        }
+        removeComponentEvent(){
+             var event = new CustomEvent("remove", {
+                bubbles: true,
+                cancelable: false,
+                composed: true,
+                detail: {
+                    action:"remove"
+                }
+            });
+            this.dispatchEvent(event);
+        }
+        
+       
+
+        openPallet(e){
+            
+            var pallet = e.currentTarget.parentElement.querySelector('.pallet');
+                pallet.style.display="block";
+        }
+        hidePallet(e){
+            var pallet = e.currentTarget.parentElement;
+                pallet.style.display="none";
+        }
+        
+
+        
+
+
+
+
+    }
+    window.customElements.define('app-breadcrumb', BreadCrumb);
+})(window, document);
+</script>
